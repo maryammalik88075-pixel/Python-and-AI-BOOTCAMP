@@ -1,0 +1,57 @@
+% Define the directory containing the dataset
+dataDir = 'C:\Users\dell\Downloads\REM_NREM.csv'; % Adjust this path if needed
+
+% Load data from the CSV file, preserving original column names
+fileData = readtable(dataDir, 'VariableNamingRule', 'preserve');
+
+% Ensure the necessary columns are present
+requiredColumns = {'Sleep_Stage', 'MeanP_Beta_F4', 'MeanP_Theta_F4', 'MeanP_Delta_F4', 'MeanP_Gamma_F4', ...
+                   'MeanP_Alpha_C4', 'MeanP_Beta_C4', 'MeanP_Theta_C4', 'MeanP_Delta_C4', 'MeanP_Gamma_C4', ...
+                   'MeanP_Alpha_O2', 'MeanP_Beta_O2', 'MeanP_Theta_O2', 'MeanP_Delta_O2', 'MeanP_Gamma_O2'};
+
+% Verify required columns exist
+missingCols = setdiff(requiredColumns, fileData.Properties.VariableNames);
+if ~isempty(missingCols)
+    error(['Missing columns: ', strjoin(missingCols, ', ')]); 
+end
+
+% Number of subjects to plot
+numSubjectsToPlot = min(5, size(fileData, 1)); % Adjust for actual data size
+
+% Loop through subjects
+for subjectIndex = 1:numSubjectsToPlot
+    % Access the current subject's data
+    subjectData = fileData(subjectIndex, :);
+
+    % Prepare frequency bands and corresponding power values
+    bandNames = {'Beta', 'Delta', 'Theta', 'Alpha', 'Gamma'};
+    bandValues = [subjectData.MeanP_Beta_F4, subjectData.MeanP_Delta_F4, ...
+                  subjectData.MeanP_Theta_F4, subjectData.MeanP_Gamma_F4, subjectData.MeanP_Alpha_C4];
+
+    % Generate PSD values (mock values for demonstration - replace with actual PSD computation if available)
+    Fs = 256; % Sampling frequency
+    t = 0:1/Fs:2-1/Fs; % 2 seconds of data
+    signal = randn(size(t)); % Replace with actual EEG signal
+    [Pxx, F] = periodogram(signal, [], [], Fs); % Compute PSD
+
+    % Create figure for each subject
+    figure;
+
+    % Subplot 1: Power Spectral Density (PSD) - Line plot
+    subplot(2,1,1);
+    plot(F, Pxx, 'LineWidth', 1.5); % Plot PSD using line graph
+    title(['Power Spectral Density for Subject ' num2str(subjectIndex)]);
+    xlabel('Frequency (Hz)');
+    ylabel('Power');
+    grid on;
+
+    % Subplot 2: Bar Chart for Band Powers
+    subplot(2,1,2);
+    bar(bandValues, 'FaceColor', 'b');
+    title(['Band Powers for Subject ' num2str(subjectIndex)]);
+    xticks(1:length(bandNames));
+    xticklabels(bandNames);
+    xlabel('Frequency Bands');
+    ylabel('Power');
+    grid on;
+end
